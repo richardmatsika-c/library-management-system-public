@@ -113,12 +113,16 @@ class Library:
         if book.available < 1:
             self.reservations.enqueue(member_id, member["name"], book_id, book.title)
             return False, (
-                f"No copies available. {member['name']} has been added."
+                f"No copies available. {member['name']} has been added "
                 f"to the reservation queue for '{book.title}'."
             )
 
         book.available -= 1
-        self.members.borrow_book(self, member_id, book_id)
+        self.members.borrow_book(member_id, book_id)
+        self.history.push("BORROW", member_id, member["name"], book_id, book.title)
+        return True, f"'{book.title}' borrowed by {member['name']}."
+
+    def return_book(self, member_id, book_id):
         try:
             member_id = int(member_id)
             book_id = int(book_id)
@@ -149,7 +153,7 @@ class Library:
 
         msg = f"'{book.title}' returned by {member['name']}."
         if next_up:
-            msg += f"\n\nNotification: '{next_up['member_name']}' is next in queue - please issue the book."
+            msg += f"\n\nNotification: '{next_up['member_name']}' is next in queue — please issue the book."
         return True, msg
 
     def sort_catalog(self, key="title"):

@@ -44,4 +44,9 @@ class MemberRegistry:
     def borrow_book(self, member_id, book_id):
         m = self._members.get(member_id)
         if m:
+            m["borrowed"].append(book_id)
+
+    def return_book(self, member_id, book_id):
+        m = self._members.get(member_id)
+        if m and book_id in m["borrowed"]:
             m["borrowed"].remove(book_id)

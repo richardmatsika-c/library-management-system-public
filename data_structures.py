@@ -188,6 +188,7 @@ class QueNode:
             "member_name": member_name,
             "book_id": book_id,
             "book_title": book_title,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
         }
 
 

@@ -1,45 +1,44 @@
 # gui.py
 # ─────────────────────────────────────────────────────────────────────────────
-# User Interface Layer (View) - Modern CustomTkinter Edition
+# User Interface Layer (View) - Dark/Teal Modern Design System (Full Card UI)
 # ─────────────────────────────────────────────────────────────────────────────
 
 import customtkinter as ctk
-from tkinter import ttk, messagebox
+from tkinter import simpledialog, messagebox
 from controller import Library
 
-# ── Color Palette ─────────────────────────────────────────────────────────────
-SIDEBAR_BG = "#1e3a8a"  # Deep blue
-MAIN_BG = "#f4f6f9"  # Off-white/light gray
-CARD_BG = "#ffffff"  # Pure white
-TEXT_DARK = "#1f2937"
-TEXT_LIGHT = "#ffffff"
+# ── DESIGN SYSTEM: Color Palette ──────────────────────────────────────────────
+MAIN_BG = "#0F172A"  # Deep slate background
+SIDEBAR_BG = "#1E293B"  # Slightly lighter slate for sidebar & cards
+CARD_BG = "#1E293B"  # Card background
+ITEM_BG = "#334155"  # Input fields & subtle highlights
 
-C_BLUE = "#3b82f6"
-C_GREEN = "#10b981"
-C_YELLOW = "#f59e0b"
-C_PURPLE = "#8b5cf6"
-C_DANGER = "#ef4444"
+TEXT_PRIMARY = "#F8FAFC"  # High contrast white for headings/values
+TEXT_SECONDARY = "#94A3B8"  # Muted gray for labels/secondary text
+
+ACCENT_TEAL = "#2DD4BF"  # Primary Teal/Cyan accent
+ACCENT_HOVER = "#14B8A6"  # Slightly darker teal for hovers
+C_DANGER = "#E11D48"  # Muted red for destructive actions
+C_WARN = "#D97706"  # Amber for warnings/sorts
+
+RAD_CARD = 12  # Rounded rectangles for cards
+RAD_BTN = 20  # Pill-shaped buttons
 
 
 class ModernLibraryApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        # 1. Initialize Controller
         self.library = Library()
 
-        # 2. Window Setup
         self.title("Library Management System")
         self.geometry("1200x800")
         self.minsize(1000, 700)
-        ctk.set_appearance_mode("light")
+
+        ctk.set_appearance_mode("dark")
         self.configure(fg_color=MAIN_BG)
 
-        # 3. Setup Modern Treeview Styling
-        self._setup_treeview_style()
-
-        # 4. Build Layout
-        self.frames = {}  # Dictionary to hold our different screens
+        self.frames = {}
         self._build_sidebar()
 
         self.main_container = ctk.CTkFrame(self, fg_color="transparent")
@@ -47,7 +46,6 @@ class ModernLibraryApp(ctk.CTk):
             side="right", fill="both", expand=True, padx=30, pady=30
         )
 
-        # Build all screens
         self._build_dashboard()
         self._build_books()
         self._build_members()
@@ -55,59 +53,14 @@ class ModernLibraryApp(ctk.CTk):
         self._build_search()
         self._build_history()
 
-        # Start on the Dashboard
         self._select_frame("Dashboard")
 
-    def _setup_treeview_style(self):
-        """Forces standard ttk.Treeview to look like a modern web table."""
-        style = ttk.Style(self)
-        style.theme_use("clam")
-        style.configure(
-            "Treeview",
-            background=CARD_BG,
-            foreground=TEXT_DARK,
-            rowheight=35,
-            borderwidth=0,
-            font=("Segoe UI", 10),
-        )
-        style.configure(
-            "Treeview.Heading",
-            background=MAIN_BG,
-            foreground=TEXT_DARK,
-            font=("Segoe UI", 11, "bold"),
-            borderwidth=0,
-        )
-        style.map(
-            "Treeview",
-            background=[("selected", C_BLUE)],
-            foreground=[("selected", TEXT_LIGHT)],
-        )
-        style.layout("Treeview", [("Treeview.treearea", {"sticky": "nswe"})])
-
-    def _create_scrollable_tree(self, parent, columns, widths):
-        """Helper to create a Treeview with a scrollbar seamlessly attached."""
-        frame = ctk.CTkFrame(parent, fg_color="transparent")
-        tree = ttk.Treeview(frame, columns=columns, show="headings")
-        for col, w in zip(columns, widths):
-            tree.heading(col, text=col)
-            tree.column(col, width=w, anchor="w")
-
-        sb = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
-        tree.configure(yscrollcommand=sb.set)
-
-        tree.pack(side="left", fill="both", expand=True)
-        sb.pack(side="right", fill="y")
-        return frame, tree
-
-    # ── ROUTER LOGIC ──────────────────────────────────────────────────────────
+    # ── ROUTER ────────────────────────────────────────────────────────────────
     def _select_frame(self, name):
-        """Hides all frames and shows the requested one."""
         for frame in self.frames.values():
             frame.pack_forget()
-
         self.frames[name].pack(fill="both", expand=True)
 
-        # Refresh data when opening a tab
         if name == "Dashboard":
             self._refresh_dashboard()
         elif name == "Books":
@@ -116,6 +69,8 @@ class ModernLibraryApp(ctk.CTk):
             self._refresh_members()
         elif name == "Borrow / Return":
             self._refresh_queue()
+        elif name == "Search":
+            self._show_all()
         elif name == "History":
             self._refresh_history()
 
@@ -129,10 +84,10 @@ class ModernLibraryApp(ctk.CTk):
 
         ctk.CTkLabel(
             self.sidebar,
-            text="📚 LIBRARY MS",
-            font=("Segoe UI", 22, "bold"),
-            text_color=TEXT_LIGHT,
-        ).pack(pady=(30, 40), padx=20, anchor="w")
+            text="Library MS",
+            font=("Segoe UI", 24, "bold"),
+            text_color=TEXT_PRIMARY,
+        ).pack(pady=(35, 40), padx=25, anchor="w")
 
         nav_items = [
             "Dashboard",
@@ -142,461 +97,502 @@ class ModernLibraryApp(ctk.CTk):
             "Search",
             "History",
         ]
-
         for item in nav_items:
             btn = ctk.CTkButton(
                 self.sidebar,
-                text=f"  {item}",
+                text=item,
                 anchor="w",
-                font=("Segoe UI", 14, "bold"),
+                font=("Segoe UI", 13, "bold"),
                 fg_color="transparent",
-                text_color=TEXT_LIGHT,
-                hover_color="#3b82f6",
-                corner_radius=15,
+                text_color=TEXT_SECONDARY,
+                hover_color=ITEM_BG,
+                corner_radius=RAD_CARD,
                 height=45,
                 command=lambda n=item: self._select_frame(n),
             )
-            btn.pack(fill="x", padx=15, pady=5)
+            btn.pack(fill="x", padx=15, pady=4)
 
-    # ── DASHBOARD SCREEN ──────────────────────────────────────────────────────
+    # ── 1. DASHBOARD SCREEN ───────────────────────────────────────────────────
     def _build_dashboard(self):
         dash_frame = ctk.CTkFrame(self.main_container, fg_color="transparent")
         self.frames["Dashboard"] = dash_frame
 
         ctk.CTkLabel(
             dash_frame,
-            text="Hello, Librarian! 👋",
-            font=("Segoe UI", 28, "bold"),
-            text_color=TEXT_DARK,
-        ).pack(anchor="w", pady=(0, 20))
+            text="Dashboard Overview",
+            font=("Segoe UI", 26, "bold"),
+            text_color=TEXT_PRIMARY,
+        ).pack(anchor="w", pady=(0, 25))
 
-        # Stats Row
         self.stats_frame = ctk.CTkFrame(dash_frame, fg_color="transparent")
         self.stats_frame.pack(fill="x", pady=(0, 30))
         self.stats_frame.columnconfigure((0, 1, 2, 3), weight=1, uniform="a")
 
         self.stat_labels = {}
         stat_configs = [
-            ("Total Books", C_BLUE),
-            ("Registered Members", C_GREEN),
-            ("Books Borrowed", C_YELLOW),
-            ("Queue Reservations", C_PURPLE),
+            ("Total Books", "📚", "#3b82f6"),
+            ("Active Members", "👥", "#10b981"),
+            ("Books Borrowed", "🔖", "#f59e0b"),
+            ("Waitlist Queue", "⚠️", "#ef4444"),
         ]
 
-        for i, (title, color) in enumerate(stat_configs):
+        for i, (title, icon, color) in enumerate(stat_configs):
             card = ctk.CTkFrame(
-                self.stats_frame, fg_color=color, corner_radius=15, height=120
+                self.stats_frame, fg_color=CARD_BG, corner_radius=RAD_CARD, height=110
             )
             card.grid(row=0, column=i, padx=10, sticky="nsew")
             card.pack_propagate(False)
-
-            val_lbl = ctk.CTkLabel(
-                card, text="0", font=("Segoe UI", 36, "bold"), text_color=TEXT_LIGHT
+            ctk.CTkLabel(card, text=icon, font=("Segoe UI Emoji", 24)).pack(
+                pady=(10, 0)
             )
-            val_lbl.pack(pady=(25, 0))
+            val_lbl = ctk.CTkLabel(
+                card, text="0", font=("Segoe UI", 28, "bold"), text_color=ACCENT_TEAL
+            )
+            val_lbl.pack()
             self.stat_labels[title] = val_lbl
             ctk.CTkLabel(
-                card, text=title, font=("Segoe UI", 14), text_color=TEXT_LIGHT
+                card, text=title, font=("Segoe UI", 12), text_color=TEXT_SECONDARY
             ).pack()
 
-        # Recent Activity Feed
-        feed_card = ctk.CTkFrame(dash_frame, fg_color=CARD_BG, corner_radius=15)
-        feed_card.pack(fill="both", expand=True, padx=10)
-
         ctk.CTkLabel(
-            feed_card,
+            dash_frame,
             text="Recent Transactions",
-            font=("Segoe UI", 18, "bold"),
-            text_color=TEXT_DARK,
-        ).pack(anchor="w", padx=20, pady=20)
-
-        tree_container, self.feed_tree = self._create_scrollable_tree(
-            feed_card, ("Time", "Action", "Member", "Book"), [160, 100, 180, 340]
+            font=("Segoe UI", 16, "bold"),
+            text_color=TEXT_PRIMARY,
+        ).pack(anchor="w", padx=10, pady=(10, 5))
+        self.dash_feed_scroll = ctk.CTkScrollableFrame(
+            dash_frame, fg_color="transparent"
         )
-        tree_container.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+        self.dash_feed_scroll.pack(fill="both", expand=True, padx=10)
 
     def _refresh_dashboard(self):
         borrowed_count = sum(len(m["borrowed"]) for m in self.library.members.all())
-
         self.stat_labels["Total Books"].configure(text=str(self.library.catalog.count))
-        self.stat_labels["Registered Members"].configure(
+        self.stat_labels["Active Members"].configure(
             text=str(len(self.library.members.all()))
         )
         self.stat_labels["Books Borrowed"].configure(text=str(borrowed_count))
-        self.stat_labels["Queue Reservations"].configure(
+        self.stat_labels["Waitlist Queue"].configure(
             text=str(self.library.reservations.size())
         )
 
-        self.feed_tree.delete(*self.feed_tree.get_children())
-        for entry in self.library.history.to_list()[:15]:  # Show last 15 actions
-            self.feed_tree.insert(
-                "",
-                "end",
-                values=(
-                    entry["timestamp"],
-                    entry["action"],
-                    f"{entry['member_name']} ({entry['member_id']})",
-                    entry["book_title"],
-                ),
-            )
+        for widget in self.dash_feed_scroll.winfo_children():
+            widget.destroy()
+        for entry in self.library.history.to_list()[:10]:
+            self._build_history_card(self.dash_feed_scroll, entry)
 
-    # ── BOOKS SCREEN ──────────────────────────────────────────────────────────
+    # ── 2. BOOKS SCREEN ───────────────────────────────────────────────────────
     def _build_books(self):
         books_frame = ctk.CTkFrame(self.main_container, fg_color="transparent")
         self.frames["Books"] = books_frame
-        books_frame.columnconfigure(0, weight=1)
-        books_frame.columnconfigure(1, weight=3)
-        books_frame.rowconfigure(0, weight=1)
 
-        # Left Column: Manage Books
-        controls_card = ctk.CTkFrame(books_frame, fg_color=CARD_BG, corner_radius=15)
-        controls_card.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
+        hdr_frame = ctk.CTkFrame(books_frame, fg_color="transparent")
+        hdr_frame.pack(fill="x", pady=(0, 20))
 
         ctk.CTkLabel(
-            controls_card,
-            text="Add New Book",
-            font=("Segoe UI", 18, "bold"),
-            text_color=TEXT_DARK,
-        ).pack(anchor="w", padx=20, pady=(20, 10))
-        self.bk_title = ctk.CTkEntry(
-            controls_card, placeholder_text="Book Title *", height=40
-        )
-        self.bk_title.pack(fill="x", padx=20, pady=5)
-        self.bk_author = ctk.CTkEntry(
-            controls_card, placeholder_text="Author *", height=40
-        )
-        self.bk_author.pack(fill="x", padx=20, pady=5)
-        self.bk_genre = ctk.CTkEntry(controls_card, placeholder_text="Genre", height=40)
-        self.bk_genre.pack(fill="x", padx=20, pady=5)
-        self.bk_copies = ctk.CTkEntry(
-            controls_card, placeholder_text="Total Copies *", height=40
-        )
-        self.bk_copies.pack(fill="x", padx=20, pady=5)
+            hdr_frame,
+            text="Book Management",
+            font=("Segoe UI", 20, "bold"),
+            text_color=TEXT_PRIMARY,
+        ).pack(side="left")
+
         ctk.CTkButton(
-            controls_card,
-            text="Add Book",
-            fg_color=C_BLUE,
-            hover_color="#2563eb",
-            height=40,
-            command=self._add_book,
-        ).pack(fill="x", padx=20, pady=15)
+            hdr_frame,
+            text="+ Add New",
+            fg_color=ACCENT_TEAL,
+            hover_color=ACCENT_HOVER,
+            text_color=MAIN_BG,
+            corner_radius=RAD_BTN,
+            height=35,
+            command=self._prompt_add_book,
+        ).pack(side="right")
 
-        ctk.CTkFrame(controls_card, height=1, fg_color=MAIN_BG).pack(
-            fill="x", padx=20, pady=10
-        )
-
-        ctk.CTkLabel(
-            controls_card,
-            text="Remove Book",
-            font=("Segoe UI", 18, "bold"),
-            text_color=TEXT_DARK,
-        ).pack(anchor="w", padx=20, pady=(10, 10))
-        self.bk_del_id = ctk.CTkEntry(
-            controls_card, placeholder_text="Book ID", height=40
-        )
-        self.bk_del_id.pack(fill="x", padx=20, pady=5)
         ctk.CTkButton(
-            controls_card,
-            text="Remove Book",
-            fg_color=C_DANGER,
-            hover_color="#b91c1c",
-            height=40,
-            command=self._remove_book,
-        ).pack(fill="x", padx=20, pady=15)
+            hdr_frame,
+            text="Remove",
+            fg_color="transparent",
+            border_width=1,
+            border_color=C_DANGER,
+            text_color=C_DANGER,
+            hover_color="#4C1D2A",
+            corner_radius=RAD_BTN,
+            height=35,
+            command=self._prompt_remove_book,
+        ).pack(side="right", padx=10)
 
-        ctk.CTkFrame(controls_card, height=1, fg_color=MAIN_BG).pack(
-            fill="x", padx=20, pady=10
-        )
-
-        ctk.CTkLabel(
-            controls_card,
-            text="Sort Catalog",
-            font=("Segoe UI", 18, "bold"),
-            text_color=TEXT_DARK,
-        ).pack(anchor="w", padx=20, pady=(10, 10))
-        self.sort_key = ctk.CTkOptionMenu(
-            controls_card, values=["title", "author", "genre"], height=40
-        )
-        self.sort_key.pack(fill="x", padx=20, pady=5)
         ctk.CTkButton(
-            controls_card,
-            text="Sort (Merge Sort)",
-            fg_color=C_YELLOW,
-            hover_color="#d97706",
-            text_color=TEXT_DARK,
-            height=40,
+            hdr_frame,
+            text="Sort (Merge)",
+            fg_color="transparent",
+            border_width=1,
+            border_color=ITEM_BG,
+            text_color=TEXT_SECONDARY,
+            hover_color=ITEM_BG,
+            corner_radius=RAD_BTN,
+            height=35,
             command=self._sort_books,
-        ).pack(fill="x", padx=20, pady=15)
+        ).pack(side="right")
 
-        # Right Column: Catalog Treeview
-        table_card = ctk.CTkFrame(books_frame, fg_color=CARD_BG, corner_radius=15)
-        table_card.grid(row=0, column=1, sticky="nsew", padx=(10, 0))
-
-        ctk.CTkLabel(
-            table_card,
-            text="Book Catalog",
-            font=("Segoe UI", 18, "bold"),
-            text_color=TEXT_DARK,
-        ).pack(anchor="w", padx=20, pady=20)
-        tree_container, self.books_tree = self._create_scrollable_tree(
-            table_card,
-            ("ID", "Title", "Author", "Genre", "Copies", "Available"),
-            [60, 250, 150, 120, 70, 80],
+        self.sort_key_var = ctk.StringVar(value="title")
+        self.sort_menu = ctk.CTkOptionMenu(
+            hdr_frame,
+            variable=self.sort_key_var,
+            values=["title", "author", "genre"],
+            fg_color=ITEM_BG,
+            button_color=ITEM_BG,
+            button_hover_color=SIDEBAR_BG,
+            text_color=TEXT_PRIMARY,
+            height=35,
+            width=110,
         )
-        tree_container.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+        self.sort_menu.pack(side="right", padx=10)
+
+        self.books_scroll = ctk.CTkScrollableFrame(books_frame, fg_color="transparent")
+        self.books_scroll.pack(fill="both", expand=True)
 
     def _refresh_books(self):
-        self.books_tree.delete(*self.books_tree.get_children())
+        for widget in self.books_scroll.winfo_children():
+            widget.destroy()
         for b in self.library.catalog.to_list():
-            self.books_tree.insert(
-                "",
-                "end",
-                values=(b.book_id, b.title, b.author, b.genre, b.copies, b.available),
-            )
+            self._build_book_card(self.books_scroll, b)
 
-    def _add_book(self):
-        ok, msg = self.library.add_book(
-            self.bk_title.get().strip(),
-            self.bk_author.get().strip(),
-            self.bk_genre.get().strip(),
-            self.bk_copies.get().strip(),
+    def _build_book_card(self, parent, b):
+        card = ctk.CTkFrame(parent, fg_color=CARD_BG, corner_radius=10, height=75)
+        card.pack(fill="x", pady=5)
+        card.pack_propagate(False)
+
+        icon_box = ctk.CTkFrame(
+            card, fg_color="#132A2F", width=50, height=50, corner_radius=8
         )
-        if ok:
-            for v in [self.bk_title, self.bk_author, self.bk_genre, self.bk_copies]:
-                v.delete(0, "end")
-            self._refresh_books()
-            messagebox.showinfo("Success", msg)
-        else:
-            messagebox.showerror("Error", msg)
+        icon_box.pack(side="left", padx=15, pady=12)
+        icon_box.pack_propagate(False)
+        ctk.CTkLabel(
+            icon_box, text="📖", font=("Segoe UI Emoji", 20), text_color=ACCENT_TEAL
+        ).pack(expand=True)
 
-    def _remove_book(self):
-        ok, msg = self.library.remove_book(self.bk_del_id.get().strip())
-        if ok:
-            self.bk_del_id.delete(0, "end")
+        text_frame = ctk.CTkFrame(card, fg_color="transparent")
+        text_frame.pack(side="left", fill="both", expand=True, padx=10, pady=12)
+        ctk.CTkLabel(
+            text_frame,
+            text=f"{b.title} (ID: {b.book_id})",
+            font=("Segoe UI", 15, "bold"),
+            text_color=TEXT_PRIMARY,
+        ).pack(anchor="w")
+        ctk.CTkLabel(
+            text_frame,
+            text=f"{b.author} • Genre: {b.genre} • Available: {b.available}/{b.copies}",
+            font=("Segoe UI", 12),
+            text_color=TEXT_SECONDARY,
+        ).pack(anchor="w")
+
+        btn_color = ACCENT_TEAL if b.available > 0 else TEXT_SECONDARY
+        btn_text = "Checkout" if b.available > 0 else "Waitlist"
+
+        action_btn = ctk.CTkButton(
+            card,
+            text=btn_text,
+            fg_color="transparent",
+            border_width=1,
+            border_color=btn_color,
+            text_color=btn_color,
+            hover_color=ITEM_BG,
+            corner_radius=RAD_BTN,
+            height=32,
+            width=90,
+        )
+        action_btn.pack(side="right", padx=20)
+        action_btn.configure(
+            command=lambda book_id=b.book_id: self._quick_checkout(book_id)
+        )
+
+    def _quick_checkout(self, book_id):
+        from tkinter import simpledialog
+
+        member_id = simpledialog.askstring("Checkout", "Enter Member ID:", parent=self)
+        if member_id:
+            ok, msg = self.library.borrow_book(member_id.strip(), book_id)
+            if ok:
+                self._refresh_books()
+                messagebox.showinfo("Success", msg)
+            else:
+                messagebox.showwarning("Notice", msg)
+
+    def _prompt_add_book(self):
+        from tkinter import simpledialog
+
+        title = simpledialog.askstring("Add Book", "Enter Title:", parent=self)
+        if not title:
+            return
+        author = simpledialog.askstring("Add Book", "Enter Author:", parent=self)
+        genre = simpledialog.askstring("Add Book", "Enter Genre:", parent=self)
+        copies = simpledialog.askstring("Add Book", "Enter Copies:", parent=self)
+
+        ok, msg = self.library.add_book(title, author, genre, copies)
+        messagebox.showinfo("Result", msg)
+        self._refresh_books()
+
+    def _prompt_remove_book(self):
+        from tkinter import simpledialog
+
+        b_id = simpledialog.askstring(
+            "Remove Book", "Enter Book ID to remove:", parent=self
+        )
+        if b_id:
+            ok, msg = self.library.remove_book(b_id)
+            messagebox.showinfo("Result", msg)
             self._refresh_books()
-            messagebox.showinfo("Success", msg)
-        else:
-            messagebox.showerror("Error", msg)
 
     def _sort_books(self):
-        self.library.sort_catalog(self.sort_key.get())
+        selected_key = self.sort_key_var.get()
+        self.library.sort_catalog(selected_key)
         self._refresh_books()
-        messagebox.showinfo(
-            "Sorted", f"Catalog sorted by {self.sort_key.get()} using Merge Sort."
-        )
 
-    # ── MEMBERS SCREEN ────────────────────────────────────────────────────────
+    # ── 3. MEMBERS SCREEN ─────────────────────────────────────────────────────
     def _build_members(self):
-        members_frame = ctk.CTkFrame(self.main_container, fg_color="transparent")
-        self.frames["Members"] = members_frame
-        members_frame.columnconfigure(0, weight=1)
-        members_frame.columnconfigure(1, weight=3)
-        members_frame.rowconfigure(0, weight=1)
+        mem_frame = ctk.CTkFrame(self.main_container, fg_color="transparent")
+        self.frames["Members"] = mem_frame
 
-        # Left Column: Manage Members
-        controls_card = ctk.CTkFrame(members_frame, fg_color=CARD_BG, corner_radius=15)
-        controls_card.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
-
+        hdr_frame = ctk.CTkFrame(mem_frame, fg_color="transparent")
+        hdr_frame.pack(fill="x", pady=(0, 20))
         ctk.CTkLabel(
-            controls_card,
-            text="Register Member",
-            font=("Segoe UI", 18, "bold"),
-            text_color=TEXT_DARK,
-        ).pack(anchor="w", padx=20, pady=(20, 10))
-        self.mb_name = ctk.CTkEntry(
-            controls_card, placeholder_text="Full Name *", height=40
-        )
-        self.mb_name.pack(fill="x", padx=20, pady=5)
-        self.mb_email = ctk.CTkEntry(controls_card, placeholder_text="Email", height=40)
-        self.mb_email.pack(fill="x", padx=20, pady=5)
-        self.mb_phone = ctk.CTkEntry(controls_card, placeholder_text="Phone", height=40)
-        self.mb_phone.pack(fill="x", padx=20, pady=5)
-        ctk.CTkButton(
-            controls_card,
-            text="Register",
-            fg_color=C_GREEN,
-            hover_color="#059669",
-            height=40,
-            command=self._add_member,
-        ).pack(fill="x", padx=20, pady=15)
-
-        ctk.CTkFrame(controls_card, height=1, fg_color=MAIN_BG).pack(
-            fill="x", padx=20, pady=10
-        )
-
-        ctk.CTkLabel(
-            controls_card,
-            text="Remove Member",
-            font=("Segoe UI", 18, "bold"),
-            text_color=TEXT_DARK,
-        ).pack(anchor="w", padx=20, pady=(10, 10))
-        self.mb_del_id = ctk.CTkEntry(
-            controls_card, placeholder_text="Member ID", height=40
-        )
-        self.mb_del_id.pack(fill="x", padx=20, pady=5)
-        ctk.CTkButton(
-            controls_card,
-            text="Remove",
-            fg_color=C_DANGER,
-            hover_color="#b91c1c",
-            height=40,
-            command=self._remove_member,
-        ).pack(fill="x", padx=20, pady=15)
-
-        # Right Column: Members Directory
-        table_card = ctk.CTkFrame(members_frame, fg_color=CARD_BG, corner_radius=15)
-        table_card.grid(row=0, column=1, sticky="nsew", padx=(10, 0))
-
-        ctk.CTkLabel(
-            table_card,
+            hdr_frame,
             text="Member Directory",
-            font=("Segoe UI", 18, "bold"),
-            text_color=TEXT_DARK,
-        ).pack(anchor="w", padx=20, pady=20)
-        tree_container, self.members_tree = self._create_scrollable_tree(
-            table_card,
-            ("ID", "Name", "Email", "Phone", "Borrowed", "Joined"),
-            [80, 200, 200, 130, 90, 100],
-        )
-        tree_container.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+            font=("Segoe UI", 20, "bold"),
+            text_color=TEXT_PRIMARY,
+        ).pack(side="left")
+
+        ctk.CTkButton(
+            hdr_frame,
+            text="Remove",
+            fg_color="transparent",
+            border_width=1,
+            border_color=C_DANGER,
+            text_color=C_DANGER,
+            hover_color="#4C1D2A",
+            corner_radius=RAD_BTN,
+            height=35,
+            command=self._prompt_remove_member,
+        ).pack(side="right", padx=10)
+        ctk.CTkButton(
+            hdr_frame,
+            text="+ Add Member",
+            fg_color=ACCENT_TEAL,
+            hover_color=ACCENT_HOVER,
+            text_color=MAIN_BG,
+            corner_radius=RAD_BTN,
+            height=35,
+            command=self._prompt_add_member,
+        ).pack(side="right")
+
+        self.members_scroll = ctk.CTkScrollableFrame(mem_frame, fg_color="transparent")
+        self.members_scroll.pack(fill="both", expand=True)
 
     def _refresh_members(self):
-        self.members_tree.delete(*self.members_tree.get_children())
+        for widget in self.members_scroll.winfo_children():
+            widget.destroy()
         for m in self.library.members.all():
-            self.members_tree.insert(
-                "",
-                "end",
-                values=(
-                    m["member_id"],
-                    m["name"],
-                    m["email"],
-                    m["phone"],
-                    len(m["borrowed"]),
-                    m["joined"],
-                ),
+            card = ctk.CTkFrame(
+                self.members_scroll, fg_color=CARD_BG, corner_radius=10, height=75
             )
+            card.pack(fill="x", pady=5)
+            card.pack_propagate(False)
 
-    def _add_member(self):
-        ok, msg = self.library.add_member(
-            self.mb_name.get().strip(),
-            self.mb_email.get().strip(),
-            self.mb_phone.get().strip(),
-        )
-        if ok:
-            for v in [self.mb_name, self.mb_email, self.mb_phone]:
-                v.delete(0, "end")
+            icon_box = ctk.CTkFrame(
+                card, fg_color=ITEM_BG, width=50, height=50, corner_radius=8
+            )
+            icon_box.pack(side="left", padx=15, pady=12)
+            icon_box.pack_propagate(False)
+            ctk.CTkLabel(
+                icon_box, text="👤", font=("Segoe UI Emoji", 20), text_color=ACCENT_TEAL
+            ).pack(expand=True)
+
+            text_frame = ctk.CTkFrame(card, fg_color="transparent")
+            text_frame.pack(side="left", fill="both", expand=True, padx=10, pady=12)
+            ctk.CTkLabel(
+                text_frame,
+                text=f"{m['name']} (ID: {m['member_id']})",
+                font=("Segoe UI", 15, "bold"),
+                text_color=TEXT_PRIMARY,
+            ).pack(anchor="w")
+            ctk.CTkLabel(
+                text_frame,
+                text=f"{m['email']} • {m['phone']} • Joined: {m['joined']}",
+                font=("Segoe UI", 12),
+                text_color=TEXT_SECONDARY,
+            ).pack(anchor="w")
+
+            badge = ctk.CTkFrame(card, fg_color=ITEM_BG, corner_radius=8)
+            badge.pack(side="right", padx=20)
+            ctk.CTkLabel(
+                badge,
+                text=f"Borrowed: {len(m['borrowed'])}",
+                font=("Segoe UI", 12, "bold"),
+                text_color=ACCENT_TEAL,
+            ).pack(padx=12, pady=6)
+
+    def _prompt_add_member(self):
+        name = simpledialog.askstring("Add Member", "Enter Full Name:", parent=self)
+        if not name:
+            return
+        email = simpledialog.askstring("Add Member", "Enter Email:", parent=self)
+        phone = simpledialog.askstring("Add Member", "Enter Phone:", parent=self)
+        ok, msg = self.library.add_member(name, email, phone)
+        messagebox.showinfo("Result", msg)
+        self._refresh_members()
+
+    def _prompt_remove_member(self):
+        m_id = simpledialog.askstring("Remove Member", "Enter Member ID:", parent=self)
+        if m_id:
+            ok, msg = self.library.remove_member(m_id)
+            messagebox.showinfo("Result", msg)
             self._refresh_members()
-            messagebox.showinfo("Success", msg)
-        else:
-            messagebox.showerror("Error", msg)
 
-    def _remove_member(self):
-        ok, msg = self.library.remove_member(self.mb_del_id.get().strip())
-        if ok:
-            self.mb_del_id.delete(0, "end")
-            self._refresh_members()
-            messagebox.showinfo("Success", msg)
-        else:
-            messagebox.showerror("Error", msg)
-
-    # ── BORROW / RETURN SCREEN ────────────────────────────────────────────────
+    # ── 4. BORROW / RETURN SCREEN ─────────────────────────────────────────────
     def _build_borrow(self):
         br_frame = ctk.CTkFrame(self.main_container, fg_color="transparent")
         self.frames["Borrow / Return"] = br_frame
         br_frame.columnconfigure((0, 1), weight=1)
         br_frame.rowconfigure(1, weight=1)
 
-        # Borrow Card
-        borrow_card = ctk.CTkFrame(br_frame, fg_color=CARD_BG, corner_radius=15)
+        borrow_card = ctk.CTkFrame(br_frame, fg_color=CARD_BG, corner_radius=RAD_CARD)
         borrow_card.grid(row=0, column=0, sticky="nsew", padx=(0, 10), pady=(0, 20))
         ctk.CTkLabel(
             borrow_card,
-            text="Borrow a Book",
-            font=("Segoe UI", 18, "bold"),
-            text_color=TEXT_DARK,
+            text="Checkout Book",
+            font=("Segoe UI", 16, "bold"),
+            text_color=TEXT_PRIMARY,
         ).pack(anchor="w", padx=20, pady=20)
 
         input_frame = ctk.CTkFrame(borrow_card, fg_color="transparent")
         input_frame.pack(fill="x", padx=20)
         self.br_member = ctk.CTkEntry(
-            input_frame, placeholder_text="Member ID", width=140, height=40
+            input_frame,
+            placeholder_text="Member ID",
+            width=140,
+            height=40,
+            fg_color=ITEM_BG,
+            border_width=0,
         )
         self.br_member.pack(side="left", padx=(0, 10), expand=True, fill="x")
         self.br_book = ctk.CTkEntry(
-            input_frame, placeholder_text="Book ID", width=140, height=40
+            input_frame,
+            placeholder_text="Book ID",
+            width=140,
+            height=40,
+            fg_color=ITEM_BG,
+            border_width=0,
         )
         self.br_book.pack(side="left", padx=(0, 10), expand=True, fill="x")
         ctk.CTkButton(
             input_frame,
-            text="Borrow",
-            fg_color=C_BLUE,
+            text="Checkout",
+            fg_color=ACCENT_TEAL,
+            text_color=MAIN_BG,
+            corner_radius=RAD_BTN,
+            font=("Segoe UI", 13, "bold"),
             width=100,
             height=40,
             command=self._borrow,
         ).pack(side="right")
 
-        # Return Card
-        return_card = ctk.CTkFrame(br_frame, fg_color=CARD_BG, corner_radius=15)
+        return_card = ctk.CTkFrame(br_frame, fg_color=CARD_BG, corner_radius=RAD_CARD)
         return_card.grid(row=0, column=1, sticky="nsew", padx=(10, 0), pady=(0, 20))
         ctk.CTkLabel(
             return_card,
-            text="Return a Book",
-            font=("Segoe UI", 18, "bold"),
-            text_color=TEXT_DARK,
+            text="Return Book",
+            font=("Segoe UI", 16, "bold"),
+            text_color=TEXT_PRIMARY,
         ).pack(anchor="w", padx=20, pady=20)
 
         ret_input_frame = ctk.CTkFrame(return_card, fg_color="transparent")
         ret_input_frame.pack(fill="x", padx=20)
         self.rt_member = ctk.CTkEntry(
-            ret_input_frame, placeholder_text="Member ID", width=140, height=40
+            ret_input_frame,
+            placeholder_text="Member ID",
+            width=140,
+            height=40,
+            fg_color=ITEM_BG,
+            border_width=0,
         )
         self.rt_member.pack(side="left", padx=(0, 10), expand=True, fill="x")
         self.rt_book = ctk.CTkEntry(
-            ret_input_frame, placeholder_text="Book ID", width=140, height=40
+            ret_input_frame,
+            placeholder_text="Book ID",
+            width=140,
+            height=40,
+            fg_color=ITEM_BG,
+            border_width=0,
         )
         self.rt_book.pack(side="left", padx=(0, 10), expand=True, fill="x")
         ctk.CTkButton(
             ret_input_frame,
             text="Return",
-            fg_color=C_GREEN,
-            hover_color="#059669",
+            fg_color="transparent",
+            border_width=1,
+            border_color=ACCENT_TEAL,
+            text_color=ACCENT_TEAL,
+            hover_color=ITEM_BG,
+            corner_radius=RAD_BTN,
+            font=("Segoe UI", 13, "bold"),
             width=100,
             height=40,
             command=self._return,
         ).pack(side="right")
 
-        # Queue Card
-        queue_card = ctk.CTkFrame(br_frame, fg_color=CARD_BG, corner_radius=15)
-        queue_card.grid(row=1, column=0, columnspan=2, sticky="nsew")
+        queue_hdr = ctk.CTkFrame(br_frame, fg_color="transparent")
+        queue_hdr.grid(row=1, column=0, columnspan=2, sticky="ew", padx=10, pady=(0, 5))
         ctk.CTkLabel(
-            queue_card,
-            text="Reservation Queue (FIFO)",
+            queue_hdr,
+            text="Reservation Waitlist (FIFO)",
             font=("Segoe UI", 18, "bold"),
-            text_color=TEXT_DARK,
-        ).pack(anchor="w", padx=20, pady=20)
+            text_color=TEXT_PRIMARY,
+        ).pack(side="left")
 
-        tree_container, self.queue_tree = self._create_scrollable_tree(
-            queue_card,
-            ("#", "Member ID", "Member Name", "Book ID", "Book Title", "Queued At"),
-            [40, 90, 180, 80, 300, 140],
-        )
-        tree_container.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+        self.queue_scroll = ctk.CTkScrollableFrame(br_frame, fg_color="transparent")
+        self.queue_scroll.grid(row=2, column=0, columnspan=2, sticky="nsew")
 
     def _refresh_queue(self):
-        self.queue_tree.delete(*self.queue_tree.get_children())
+        for widget in self.queue_scroll.winfo_children():
+            widget.destroy()
         for i, e in enumerate(self.library.reservations.to_list(), 1):
-            self.queue_tree.insert(
-                "",
-                "end",
-                values=(
-                    i,
-                    e["member_id"],
-                    e["member_name"],
-                    e["book_id"],
-                    e["book_title"],
-                    e["timestamp"],
-                ),
+            card = ctk.CTkFrame(
+                self.queue_scroll, fg_color=CARD_BG, corner_radius=10, height=70
             )
+            card.pack(fill="x", pady=4)
+            card.pack_propagate(False)
+
+            icon_box = ctk.CTkFrame(
+                card, fg_color=ITEM_BG, width=45, height=45, corner_radius=8
+            )
+            icon_box.pack(side="left", padx=15, pady=12)
+            icon_box.pack_propagate(False)
+            ctk.CTkLabel(
+                icon_box, text="⏳", font=("Segoe UI Emoji", 18), text_color=C_WARN
+            ).pack(expand=True)
+
+            text_frame = ctk.CTkFrame(card, fg_color="transparent")
+            text_frame.pack(side="left", fill="both", expand=True, padx=10, pady=12)
+            ctk.CTkLabel(
+                text_frame,
+                text=f"{e['member_name']} (ID: {e['member_id']}) — Waiting for: {e['book_title']}",
+                font=("Segoe UI", 14, "bold"),
+                text_color=TEXT_PRIMARY,
+            ).pack(anchor="w")
+            ctk.CTkLabel(
+                text_frame,
+                text=f"Queued At: {e['timestamp']}",
+                font=("Segoe UI", 11),
+                text_color=TEXT_SECONDARY,
+            ).pack(anchor="w")
+
+            badge = ctk.CTkFrame(card, fg_color=ITEM_BG, corner_radius=8)
+            badge.pack(side="right", padx=20)
+            ctk.CTkLabel(
+                badge,
+                text=f"Rank #{i}",
+                font=("Segoe UI", 12, "bold"),
+                text_color=C_WARN,
+            ).pack(padx=12, pady=6)
 
     def _borrow(self):
         ok, msg = self.library.borrow_book(
@@ -606,9 +602,8 @@ class ModernLibraryApp(ctk.CTk):
             self.br_member.delete(0, "end")
             self.br_book.delete(0, "end")
             self._refresh_queue()
-            messagebox.showinfo("Success", msg)
         else:
-            self._refresh_queue()  # In case they were added to the waitlist
+            self._refresh_queue()
             messagebox.showwarning("Notice", msg)
 
     def _return(self):
@@ -619,19 +614,17 @@ class ModernLibraryApp(ctk.CTk):
             self.rt_member.delete(0, "end")
             self.rt_book.delete(0, "end")
             self._refresh_queue()
-            messagebox.showinfo("Success", msg)
         else:
             messagebox.showerror("Error", msg)
 
-    # ── SEARCH SCREEN ─────────────────────────────────────────────────────────
+    # ── 5. SEARCH SCREEN ──────────────────────────────────────────────────────
     def _build_search(self):
         search_frame = ctk.CTkFrame(self.main_container, fg_color="transparent")
         self.frames["Search"] = search_frame
         search_frame.columnconfigure(0, weight=1)
         search_frame.rowconfigure(1, weight=1)
 
-        # Search Bar Card
-        bar_card = ctk.CTkFrame(search_frame, fg_color=CARD_BG, corner_radius=15)
+        bar_card = ctk.CTkFrame(search_frame, fg_color=CARD_BG, corner_radius=RAD_CARD)
         bar_card.grid(row=0, column=0, sticky="ew", pady=(0, 20))
 
         controls_frame = ctk.CTkFrame(bar_card, fg_color="transparent")
@@ -641,151 +634,174 @@ class ModernLibraryApp(ctk.CTk):
         se = ctk.CTkEntry(
             controls_frame,
             textvariable=self.search_var,
-            placeholder_text="Enter search query...",
+            placeholder_text="Search catalog...",
             height=40,
             width=400,
+            fg_color=ITEM_BG,
+            border_width=0,
         )
         se.pack(side="left", padx=(0, 15))
         se.bind("<Return>", lambda e: self._do_search())
 
         self.search_field = ctk.CTkOptionMenu(
-            controls_frame, values=["title", "author", "genre"], height=40
+            controls_frame,
+            values=["title", "author", "genre"],
+            height=40,
+            fg_color=ITEM_BG,
+            button_color=ITEM_BG,
         )
         self.search_field.pack(side="left", padx=(0, 15))
 
         ctk.CTkButton(
             controls_frame,
             text="Search",
-            fg_color=C_BLUE,
+            fg_color=ACCENT_TEAL,
+            text_color=MAIN_BG,
+            font=("Segoe UI", 13, "bold"),
+            corner_radius=RAD_BTN,
             height=40,
             command=self._do_search,
         ).pack(side="left", padx=(0, 10))
         ctk.CTkButton(
             controls_frame,
-            text="Show All",
-            fg_color=C_YELLOW,
-            text_color=TEXT_DARK,
-            hover_color="#d97706",
+            text="Clear",
+            fg_color="transparent",
+            border_width=1,
+            border_color=TEXT_SECONDARY,
+            text_color=TEXT_SECONDARY,
+            hover_color=ITEM_BG,
+            font=("Segoe UI", 13, "bold"),
+            corner_radius=RAD_BTN,
             height=40,
             command=self._show_all,
         ).pack(side="left")
 
-        # Results Card
-        res_card = ctk.CTkFrame(search_frame, fg_color=CARD_BG, corner_radius=15)
-        res_card.grid(row=1, column=0, sticky="nsew")
-
+        hdr_frame = ctk.CTkFrame(search_frame, fg_color="transparent")
+        hdr_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=(0, 5))
         ctk.CTkLabel(
-            res_card,
+            hdr_frame,
             text="Search Results",
             font=("Segoe UI", 18, "bold"),
-            text_color=TEXT_DARK,
-        ).pack(anchor="w", padx=20, pady=20)
+            text_color=TEXT_PRIMARY,
+        ).pack(side="left")
 
-        tree_container, self.search_tree = self._create_scrollable_tree(
-            res_card,
-            ("ID", "Title", "Author", "Genre", "Copies", "Available"),
-            [60, 300, 180, 130, 70, 80],
+        self.search_scroll = ctk.CTkScrollableFrame(
+            search_frame, fg_color="transparent"
         )
-        tree_container.pack(fill="both", expand=True, padx=20, pady=(0, 20))
-        self._show_all()
+        self.search_scroll.grid(row=2, column=0, sticky="nsew")
 
     def _do_search(self):
         query = self.search_var.get().strip()
-        if not query:
-            messagebox.showwarning("Input required", "Please enter a search term.")
-            return
         results = self.library.search(query, self.search_field.get())
-        self.search_tree.delete(*self.search_tree.get_children())
+        for widget in self.search_scroll.winfo_children():
+            widget.destroy()
         for b in results:
-            self.search_tree.insert(
-                "",
-                "end",
-                values=(b.book_id, b.title, b.author, b.genre, b.copies, b.available),
-            )
-        if not results:
-            messagebox.showinfo("No results", f"No books found matching '{query}'.")
+            self._build_book_card(self.search_scroll, b)
 
     def _show_all(self):
-        self.search_tree.delete(*self.search_tree.get_children())
+        self.search_var.set("")
+        for widget in self.search_scroll.winfo_children():
+            widget.destroy()
         for b in self.library.catalog.to_list():
-            self.search_tree.insert(
-                "",
-                "end",
-                values=(b.book_id, b.title, b.author, b.genre, b.copies, b.available),
-            )
+            self._build_book_card(self.search_scroll, b)
 
-    # ── HISTORY SCREEN ────────────────────────────────────────────────────────
+    # ── 6. HISTORY SCREEN ─────────────────────────────────────────────────────
     def _build_history(self):
         hist_frame = ctk.CTkFrame(self.main_container, fg_color="transparent")
         self.frames["History"] = hist_frame
         hist_frame.columnconfigure(0, weight=1)
-        hist_frame.rowconfigure(0, weight=1)
+        hist_frame.rowconfigure(1, weight=1)
 
-        card = ctk.CTkFrame(hist_frame, fg_color=CARD_BG, corner_radius=15)
-        card.grid(row=0, column=0, sticky="nsew")
-
-        # Header with Buttons
-        hdr_frame = ctk.CTkFrame(card, fg_color="transparent")
-        hdr_frame.pack(fill="x", padx=20, pady=20)
+        hdr_frame = ctk.CTkFrame(hist_frame, fg_color="transparent")
+        hdr_frame.grid(row=0, column=0, sticky="ew", pady=(0, 10))
 
         ctk.CTkLabel(
             hdr_frame,
-            text="System History (LIFO Stack)",
-            font=("Segoe UI", 18, "bold"),
-            text_color=TEXT_DARK,
+            text="Activity Log (Stack)",
+            font=("Segoe UI", 20, "bold"),
+            text_color=TEXT_PRIMARY,
         ).pack(side="left")
         ctk.CTkButton(
             hdr_frame,
-            text="Undo Last Action",
-            fg_color=C_DANGER,
-            hover_color="#b91c1c",
+            text="Undo Last",
+            fg_color="transparent",
+            border_width=1,
+            border_color=C_DANGER,
+            text_color=C_DANGER,
+            hover_color="#4C1D2A",
+            corner_radius=RAD_BTN,
+            font=("Segoe UI", 12, "bold"),
             height=35,
             command=self._undo,
         ).pack(side="right", padx=(10, 0))
-        ctk.CTkButton(
-            hdr_frame,
-            text="Refresh",
-            fg_color=C_BLUE,
-            height=35,
-            command=self._refresh_history,
-        ).pack(side="right")
 
-        tree_container, self.hist_tree = self._create_scrollable_tree(
-            card, ("Timestamp", "Action", "Member", "Book"), [160, 90, 220, 360]
+        self.hist_scroll = ctk.CTkScrollableFrame(hist_frame, fg_color="transparent")
+        self.hist_scroll.grid(row=1, column=0, sticky="nsew")
+
+    def _build_history_card(self, parent, entry):
+        is_borrow = entry["action"] == "BORROW"
+        card_color = CARD_BG
+        icon = "📤" if is_borrow else "📥"
+        accent = C_WARN if is_borrow else ACCENT_TEAL
+
+        card = ctk.CTkFrame(parent, fg_color=card_color, corner_radius=8, height=65)
+        card.pack(fill="x", pady=4)
+        card.pack_propagate(False)
+
+        icon_box = ctk.CTkFrame(
+            card, fg_color=ITEM_BG, width=40, height=40, corner_radius=8
         )
-        tree_container.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+        icon_box.pack(side="left", padx=15, pady=12)
+        icon_box.pack_propagate(False)
+        ctk.CTkLabel(
+            icon_box, text=icon, font=("Segoe UI Emoji", 16), text_color=accent
+        ).pack(expand=True)
+
+        text_frame = ctk.CTkFrame(card, fg_color="transparent")
+        text_frame.pack(side="left", fill="both", expand=True, padx=10, pady=10)
+        title_text = (
+            f"{entry['member_name']} ({entry['member_id']}) — {entry['book_title']}"
+        )
+        ctk.CTkLabel(
+            text_frame,
+            text=title_text,
+            font=("Segoe UI", 14, "bold"),
+            text_color=TEXT_PRIMARY,
+        ).pack(anchor="w")
+        ctk.CTkLabel(
+            text_frame,
+            text=f"{entry['timestamp']}",
+            font=("Segoe UI", 11),
+            text_color=TEXT_SECONDARY,
+        ).pack(anchor="w")
+
+        badge = ctk.CTkFrame(card, fg_color=accent, corner_radius=4)
+        badge.pack(side="right", padx=20)
+        ctk.CTkLabel(
+            badge,
+            text=entry["action"],
+            font=("Segoe UI", 11, "bold"),
+            text_color=MAIN_BG,
+        ).pack(padx=10, pady=4)
 
     def _refresh_history(self):
-        self.hist_tree.delete(*self.hist_tree.get_children())
+        for widget in self.hist_scroll.winfo_children():
+            widget.destroy()
         for entry in self.library.history.to_list():
-            self.hist_tree.insert(
-                "",
-                "end",
-                values=(
-                    entry["timestamp"],
-                    entry["action"],
-                    f"{entry['member_name']} ({entry['member_id']})",
-                    entry["book_title"],
-                ),
-            )
+            self._build_history_card(self.hist_scroll, entry)
 
     def _undo(self):
         last = self.library.history.peek()
-        if last is None:
-            messagebox.showinfo("Nothing to undo", "History is empty.")
+        if not last:
             return
-
         confirm = messagebox.askyesno(
             "Confirm Undo",
-            f"Undo last action?\n\nAction:  {last['action']}\nMember:  {last['member_name']}\nBook:    {last['book_title']}",
+            f"Reverse this action?\n\n{last['action']}: {last['book_title']}",
         )
         if not confirm:
             return
 
         entry = self.library.history.pop()
-        if entry is None:
-            return
-
         book = self.library.catalog.find_by_id(entry["book_id"])
         member = self.library.members.find(entry["member_id"])
 
@@ -799,6 +815,3 @@ class ModernLibraryApp(ctk.CTk):
             member["borrowed"].append(entry["book_id"])
 
         self._refresh_history()
-        messagebox.showinfo(
-            "Undone", f"Action undone: {entry['action']} — {entry['book_title']}"
-        )

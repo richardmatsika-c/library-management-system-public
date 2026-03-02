@@ -24,7 +24,7 @@ The codebase is heavily modularized into distinct layers:
 1. `data_structures.py`: Raw mathematical logic and custom nodes.
 2. `database.py`: State persistence and data mapping.
 3. `controller.py`: The business logic bridging data and the view.
-4. `gui.py`: The visual interface and frame routing.
+4. `mmorden_gui.py`: The visual interface and frame routing.
 5. `main.py`: The lightweight application entry point.
 
 ## 💻 How to Run
